@@ -1,5 +1,9 @@
 # Ansible Role for Arista Cloudvision®
 
+## Requirements
+- [Arista Cloudvision](http://www.arista.com/en/products/eos/eos-cloudvision)
+- [Cloudvision RestAPI Client](https://github.com/aristanetworks/cvprac)
+
 ## Modules
 ### cv_info
 Gather version information about Cloudvision
