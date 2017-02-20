@@ -16,11 +16,17 @@ SUBNET_MASK = '24'
 ##
 
 def make_configlet(ip_addr):
-    config = 'hostname ansible-%s\n' % ip_addr
+    config = 'event-handler ansible-deploy\ntrigger on-boot\n'
+    config += 'action ssh ansible-controller "ansible-playbook -i hosts deploy_leaf.yaml"\n'
+    config += 'delay 120\nasynchronous\n!\n'
+    
+    config += 'hostname ansible-%s\n' % ip_addr
     config += 'ip route 0/0 %s\n!\n' % GW
     config += 'interface Management1\nip address %s/%s' \
                % (ip_addr, SUBNET_MASK)
 
+    print config
+    exit()
     return config
 
 def remove_old_configlet(name, cvpclnt):
