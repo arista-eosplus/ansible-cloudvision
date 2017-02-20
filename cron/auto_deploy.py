@@ -74,15 +74,10 @@ def deploy_device(clnt, device, target_container, configlets, image=None):
     cl = [ c['key'] for c in prop_config['proposedConfiglets']]
     cnl = [ p['name'] for p in prop_config['proposedConfiglets']]
     
-    new_configlets = []
-    for c in prop_config['proposedConfiglets']:
-        new_configlets.append({'name':c['name'], 'key':c['key']}) 
-
     #add in device specific configlets
     for config in configlets:
         cl.append(config['key'])
         cnl.append(config['name'])
-        new_configlets.append({'name':config['name'], 'key':config['key']})
  
     print 'done getting configlets'
 
