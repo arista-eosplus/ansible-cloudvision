@@ -25,8 +25,6 @@ def make_configlet(ip_addr):
     config += 'interface Management1\nip address %s/%s' \
                % (ip_addr, SUBNET_MASK)
 
-    print config
-    exit()
     return config
 
 def remove_old_configlet(name, cvpclnt):
@@ -155,33 +153,33 @@ def main():
                 if element['key'] == device:
                     node = element       
                     break 
-        #have the netElement need to make the ma1 configlet
-        sn = node['systemMacAddress']
-        configlet = make_configlet(node['ipAddress'])
-        name = sn + '-MA1-CONFIG'
-        try:
-            configlet_key = clnt.api.add_configlet(name, configlet)
-        except CvpApiError as e:
-            if 'Data already exists' in str(e):
-                #remove existing configlet and recreate
-                remove_old_configlet(name, clnt)
-                try:
-                    configlet_key = clnt.api.add_configlet(name, configlet)
-                except CvpApiError as e:
-                    # if this fails again tell user to check task list:
-                    print 'unable to add configlet %s' % str(e)
+            #have the netElement need to make the ma1 configlet
+            sn = node['systemMacAddress']
+            configlet = make_configlet(node['ipAddress'])
+            name = sn + '-MA1-CONFIG'
+            try:
+                configlet_key = clnt.api.add_configlet(name, configlet)
+            except CvpApiError as e:
+                if 'Data already exists' in str(e):
+                    #remove existing configlet and recreate
+                    remove_old_configlet(name, clnt)
+                    try:
+                        configlet_key = clnt.api.add_configlet(name, configlet)
+                    except CvpApiError as e:
+                        # if this fails again tell user to check task list:
+                        print 'unable to add configlet %s' % str(e)
 
-        #add ma1 configlet to device
-        configlet_to_add = {'name':name, 'key':configlet_key}
-        task = None
-        task = deploy_device(clnt, node, TARGET, [configlet_to_add], IMAGE)   
-        try:
-            print 'attempting to execute task'
-            clnt.api.execute_task(task['data']['taskIds'][0])
-           
-        except CvpApiError as e:
-            print 'error executing task: %s' % str(e)
-        print 'task executed...'
+            #add ma1 configlet to device
+            configlet_to_add = {'name':name, 'key':configlet_key}
+            task = None
+            task = deploy_device(clnt, node, TARGET, [configlet_to_add], IMAGE)   
+            try:
+                print 'attempting to execute task'
+                clnt.api.execute_task(task['data']['taskIds'][0])
+               
+            except CvpApiError as e:
+                print 'error executing task: %s' % str(e)
+            print 'task executed...'
 
                                                      
 
