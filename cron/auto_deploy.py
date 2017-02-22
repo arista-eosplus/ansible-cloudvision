@@ -1,5 +1,7 @@
-import uuid
+import argparse
 import time
+import uuid
+import yaml
 
 from cvprac.cvp_client import CvpClient
 from cvprac.cvp_client_errors import CvpApiError
@@ -11,15 +13,12 @@ CVPUSER = 'cvpadmin'
 CVPPW = 'cvp123'
 TARGET = 'Ansible'
 IMAGE = 'vEOS-4.17.2F-lab'
-GW = '192.168.1.1'
+GW = '192.168.1.8'
 SUBNET_MASK = '24'
 ##
 
 def make_configlet(ip_addr):
-    config = 'event-handler ansible-deploy\ntrigger on-boot\n'
-    config += 'action ssh ansible-controller "ansible-playbook -i hosts deploy_leaf.yaml"\n'
-    config += 'delay 120\nasynchronous\n!\n'
-    
+    config = '' 
     config += 'hostname ansible-%s\n' % ip_addr
     config += 'ip route 0/0 %s\n!\n' % GW
     config += 'interface Management1\nip address %s/%s' \
@@ -127,12 +126,20 @@ def deploy_device(clnt, device, target_container, configlets, image=None):
     return task
 
 
-
-
-
 def main():
+    parser = argparse.ArgumentParser(description="Auto Deploy CVP Nodes")
+    parser.add_argument("--config", action="store", help="config file location",
+                                          default="config.yml")
+    options = parser.parse_args()
+
+    try:
+        with open(options.config) as f:
+            config = yaml.safe_load(f)
+    except IOError:
+        print 'Config file %s not found'
+
     clnt = CvpClient()
-    clnt.connect(CVPHOST, CVPUSER, CVPPW)
+    clnt.connect(config['cvp_host'], config['cvp_user'], config['cvp_pw'])
     #get the devices in the undefined container
 
     inv = clnt.get('/inventory/getInventory.do?startIndex=0&endIndex=0')
@@ -144,6 +151,7 @@ def main():
         exit()
     if len(devices) == 0:
         msg = 'No devices in undefined container.  Exiting'
+        print msg
         exit()
     else:
         node = None
@@ -172,7 +180,8 @@ def main():
             #add ma1 configlet to device
             configlet_to_add = {'name':name, 'key':configlet_key}
             task = None
-            task = deploy_device(clnt, node, TARGET, [configlet_to_add], IMAGE)   
+            task = deploy_device(clnt, node, config['target_container'], 
+                                 [configlet_to_add], config['image'])   
             try:
                 print 'attempting to execute task'
                 clnt.api.execute_task(task['data']['taskIds'][0])
