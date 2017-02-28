@@ -1,0 +1,12 @@
+cvp_host:
+    - '10.81.111.8'
+cvp_user: cvpadmin
+cvp_pw: cvp123
+target_container: Ansible
+provisioned_container: Provisioned
+image: 'vEOS-4.17.2F-lab'
+gw: '192.168.1.8'
+subnet_mask: 24
+ansible_path: '/home/eosplus/ansible-cloudvision/ansible/bin/ansible-playbook'
+playbook: leaf.yaml
+

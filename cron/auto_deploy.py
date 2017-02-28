@@ -130,7 +130,8 @@ def main():
         with open(options.config) as f:
             config = yaml.safe_load(f)
     except IOError:
-        print 'Config file %s not found'
+        print 'Config file %s not found' % options.config
+        exit()
 
     clnt = CvpClient()
     clnt.connect(config['cvp_host'], config['cvp_user'], config['cvp_pw'])
