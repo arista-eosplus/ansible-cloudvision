@@ -31,8 +31,7 @@ def main():
     clnt.connect(config['cvp_host'], config['cvp_user'], config['cvp_pw'])
 
     # determine if there is any nodes in the ansible container
-    cont_list = clnt.api.get_device_container_map()
-    devices = [ k for k,v in cont_list.iteritems() if v == config['target_container']]
+    devices = clnt.api.get_devices_in_container(config['target_container'])
     fqdn = None
     ip = None
     to_provision = None 

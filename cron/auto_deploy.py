@@ -40,22 +40,18 @@ def main():
     clnt.connect(config['cvp_host'], config['cvp_user'], config['cvp_pw'])
     #get the devices in the undefined container
 
-    containers = clnt.api.get_device_container_map()
-    inv = clnt.api.get_inventory()
+    #containers = clnt.api.get_device_container_map()
+    #inv = clnt.api.get_inventory()
 
-    devices = [ k for k,v in containers.iteritems() if v == 'Undefined'] 
+    devices = clnt.api.get_devices_in_container('Undefined') 
 
     if len(devices) == 0:
         print 'No devices in undefined container.  Exiting'
         exit()
     else:
         node = None
-        for device in devices:
-            # get the device config:
-            for element in inv:
-                if element['key'] == device:
-                    node = element       
-                    break 
+        for node in devices:
+            print node
             #have the netElement need to make the ma1 configlet
             sn = node['systemMacAddress']
             configlet = make_configlet(node['ipAddress'], config)
@@ -86,9 +82,6 @@ def main():
                
             except CvpApiError as e:
                 print str(e)
-
-
-                                                     
 
 if __name__ == '__main__':
     main()
