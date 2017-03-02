@@ -35,13 +35,7 @@ def main():
     fqdn = None
     ip = None
     to_provision = None 
-    for device in devices:
-        # get information about device
-        inv = clnt.api.get_inventory()
-        for node in inv:
-            if node['systemMacAddress'] == device:
-                to_provision = node
-                break
+    for to_provision in devices:
         # move the container
         task = move_to_provisioned_container(clnt, to_provision, config['provisioned_container']) 
         #cancel the task so we don't lose configs
@@ -58,7 +52,5 @@ def main():
             print "Ansible provision failed for host %s due to %s" % i(fqdn, str(e))
             continue
 
-            
-        
 if __name__ == '__main__':
     main()
