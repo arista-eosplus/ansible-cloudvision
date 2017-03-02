@@ -1,14 +1,9 @@
 import argparse
 import time
-import uuid
 import yaml
 
 from cvprac.cvp_client import CvpClient
 from cvprac.cvp_client_errors import CvpApiError
-
-
-## TODO: Move all of these to a yaml config file
-##
 
 def make_configlet(ip_addr, config):
     configlet = '' 
@@ -39,10 +34,6 @@ def main():
     clnt = CvpClient()
     clnt.connect(config['cvp_host'], config['cvp_user'], config['cvp_pw'])
     #get the devices in the undefined container
-
-    #containers = clnt.api.get_device_container_map()
-    #inv = clnt.api.get_inventory()
-
     devices = clnt.api.get_devices_in_container('Undefined') 
 
     if len(devices) == 0:
