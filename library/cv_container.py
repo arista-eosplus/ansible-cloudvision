@@ -23,8 +23,8 @@ options:
     required: false
     default: null
 """
+
 from ansible.module_utils.basic import AnsibleModule
-from cvprac.cvp_api import CvpApi
 from cvprac.cvp_client import CvpClient
 from cvprac.cvp_client_errors import CvpLoginError, CvpApiError
 
@@ -44,27 +44,20 @@ def connect(module):
     return client
 
 
-def get_containers(client):
-    url = '/inventory/add/searchContainers.do?startIndex=0&endIndex=0'
-    return client.get(url)
-
 def process_container(module, container, parent):
-    containers = get_containers(module.client)
+    containers = module.client.api.get_containers()
 
     # Ensure the parent exists
     parent = next((item for item in containers['data'] if
                    item['name'] == parent), None)
-
     if not parent:
         module.fail_json(msg=str('Parent container does not exist.'))
 
     cont = next((item for item in containers['data'] if
                  item['name'] == container), None)
-
     if not cont:
-        module.client.api.add_container(container,
-                                        parent['name'],
-                                        parent['id'])
+        module.client.api.add_container(container, parent['name'],
+                                        parent['key'])
         return True
 
     return False
