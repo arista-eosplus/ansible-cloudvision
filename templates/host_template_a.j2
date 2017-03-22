@@ -1,0 +1,8 @@
+interface Ethernet{{ switch_port }}
+   description Host {{ server_name }} managed by Ansible and Jinja template
+   load-interval 30
+   switchport
+   switchport trunk allowed vlan 10-11,400-599
+   switchport mode trunk
+   no shutdown
+!
