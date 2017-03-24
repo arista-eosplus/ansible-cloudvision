@@ -73,8 +73,9 @@ def server_configurable_configlet(module):
 
 
 def port_configurable(module, configlet):
+    regex = r'^interface Ethernet%s' % module.params['switch_port']
     for config_line in configlet['config'].split('\n'):
-        if 'Ethernet%s' % module.params['switch_port'] in config_line:
+        if re.match(regex, config_line):
             return True
     return False
 
@@ -94,10 +95,14 @@ def configlet_action(module, configlet):
     result['fullConfig'] = updated_configlet_content(module,
                                                      configlet['config'],
                                                      result['newConfigBlock'])
-    module.client.api.update_configlet(result['fullConfig'], configlet['key'],
-                                       configlet['name'])
-    result['changed'] = True
-    result['taskCreated'] = True
+    resp = module.client.api.update_configlet(result['fullConfig'],
+                                              configlet['key'],
+                                              configlet['name'])
+    if 'data' in resp:
+        result['updateConfigletResponse'] = resp['data']
+        if 'task' in resp['data']:
+            result['changed'] = True
+            result['taskCreated'] = True
     return result
 
 
@@ -203,10 +208,7 @@ def main():
                 result['taskExecuted'] = True
             else:
                 result['taskCreated'] = False
-
         result.update(module.params)
-        if module.params['state'] in ['add', 'remove']:
-            result['changed'] = True
     except CvpApiError, e:
         module.fail_json(msg=str(e))
 
