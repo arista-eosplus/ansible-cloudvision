@@ -73,7 +73,7 @@ def main():
                 print 'Task executed...'
                
             except CvpApiError as e:
-                print str(e)
+                print "unable to deploy: %s due to %s" % (node['systemMacAddress'], str(e))
 
 if __name__ == '__main__':
     main()
