@@ -57,7 +57,8 @@ def main():
                         configlet_key = clnt.api.add_configlet(name, configlet)
                     except CvpApiError as e:
                         # if this fails again tell user to check task list:
-                        print 'unable to add configlet %s' % str(e)
+                        print 'unable to add configlet: %s' % str(e)
+                        exit()
 
             #add ma1 configlet to device
             configlet_to_add = {'name':name, 'key':configlet_key}
