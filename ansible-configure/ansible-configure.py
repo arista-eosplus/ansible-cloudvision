@@ -1,10 +1,13 @@
 import yaml
 import argparse
 import subprocess
+import logging
 
 from cvprac.cvp_client import CvpClient
 from cvprac.cvp_client_errors import CvpApiError
 
+logging.basicConfig(filename='/tmp/ansible_cvp.log', level=logging.DEBUG, 
+                    format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 def move_to_container(clnt, device, name):
     task = None
@@ -24,7 +27,7 @@ def main():
         with open(options.config) as f:
             config = yaml.safe_load(f)
     except IOError:
-        print 'Config file %s not found' % options.config
+        logging.info(Config file %s not found' % options.config)
         exit()
 
     clnt = CvpClient()
@@ -42,12 +45,16 @@ def main():
         # create dynamic host file
         with open('cvp_provision', 'w+') as f:
             f.write('%s  ansible_host=%s' % (to_provision['fqdn'], to_provision['ipAddress']))
-        print "Starting to configure %s" % to_provision['fqdn']
+        logging.info("Starting to configure %s" % to_provision['fqdn'])
+                     
         try:
-            output = subprocess.check_output([config['ansible_path'], '-i', 'cvp_provision', config['playbook']])
-            print "Ansible completed configuration"
+            logging.info("Staring to configure %s via Ansible" % to_provision['fqdn'])
+            output = subprocess.check_output([config['ansible_path'], '-i', "-%s" % config['verbosity'], 
+                                              'cvp_provision', config['playbook']])
+            logging.info(output)
+            logging.info("Ansible completed configuration")
         except subprocess.CalledProcessError as e:
-            print "Ansible provision failed for host %s due to %s" % i(fqdn, str(e))
+            logging.info("Ansible provision failed for host %s due to %s" % i(fqdn, str(e)))
             # Ansible errored out so move device back
             task = move_to_container(clnt, to_provision, config['target_container']) 
             #cancel the task so we don't lose configs
