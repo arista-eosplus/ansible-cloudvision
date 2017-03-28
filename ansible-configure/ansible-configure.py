@@ -31,32 +31,54 @@ def main():
         exit()
 
     clnt = CvpClient()
-    clnt.connect(config['cvp_host'], config['cvp_user'], config['cvp_pw'])
-
+    try:
+        clnt.connect(config['cvp_host'], config['cvp_user'], config['cvp_pw'])
+    except KeyError:
+        logging.info("CVP Credentials not found in config file")
+        exit()    
+                   
     # determine if there is any nodes in the ansible container
-    devices = clnt.api.get_devices_in_container(config['target_container'])
+    try:
+       target = config['target_container']
+       prov_cont = config['provisioned_container']
+    except KeyError:
+       logging.info("Not container info found in config file")
+       exit()
+     
+    try:
+        verbosity = config['verbosity']
+    except KeyError:
+        verbosity = 'v';
+    try:
+        ansible_path = config['ansible_path']
+    except:
+        ansible_path = '/usr/bin/ansible'
+                     
+    devices = clnt.api.get_devices_in_container(target)
      
     for to_provision in devices:
         # move the container
-        task = move_to_container(clnt, to_provision, config['provisioned_container']) 
+        task = move_to_container(clnt, to_provision, prov_cont) 
         #cancel the task so we don't lose configs
         clnt.api.cancel_task(task['data']['taskIds'][0])
  
         # create dynamic host file
         with open('cvp_provision', 'w+') as f:
             f.write('%s  ansible_host=%s' % (to_provision['fqdn'], to_provision['ipAddress']))
+                     
         logging.info("Starting to configure %s" % to_provision['fqdn'])
                      
         try:
             logging.info("Staring to configure %s via Ansible" % to_provision['fqdn'])
-            output = subprocess.check_output([config['ansible_path'], '-i', "-%s" % config['verbosity'], 
+            output = subprocess.check_output([ansible_path, '-i', "-%s" % verbosity, 
                                               'cvp_provision', config['playbook']])
             logging.info(output)
             logging.info("Ansible completed configuration")
+                     
         except subprocess.CalledProcessError as e:
             logging.info("Ansible provision failed for host %s due to %s" % i(fqdn, str(e)))
             # Ansible errored out so move device back
-            task = move_to_container(clnt, to_provision, config['target_container']) 
+            task = move_to_container(clnt, to_provision, target) 
             #cancel the task so we don't lose configs
             clnt.api.cancel_task(task['data']['taskIds'][0])
             continue
