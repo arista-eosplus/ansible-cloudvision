@@ -5,14 +5,14 @@ import subprocess
 from cvprac.cvp_client import CvpClient
 from cvprac.cvp_client_errors import CvpApiError
 
-def move_to_provisioned_container(clnt, device, name):
+
+def move_to_container(clnt, device, name):
     task = None
     # get container info
     c_info = clnt.api.get_container_by_name(name)
     # schedule move
     task = clnt.api.move_device_to_container('Ansible Deploy', device, c_info, True)
-    return task
- 
+    return task 
 
 def main():
     parser = argparse.ArgumentParser(description="Auto Provision CVP Nodes with Ansible")
@@ -32,24 +32,26 @@ def main():
 
     # determine if there is any nodes in the ansible container
     devices = clnt.api.get_devices_in_container(config['target_container'])
-    fqdn = None
-    ip = None
-    to_provision = None 
+     
     for to_provision in devices:
         # move the container
-        task = move_to_provisioned_container(clnt, to_provision, config['provisioned_container']) 
+        task = move_to_container(clnt, to_provision, config['provisioned_container']) 
         #cancel the task so we don't lose configs
         clnt.api.cancel_task(task['data']['taskIds'][0])
  
         # create dynamic host file
         with open('cvp_provision', 'w+') as f:
             f.write('%s  ansible_host=%s' % (to_provision['fqdn'], to_provision['ipAddress']))
-        print "Starting to configure %s" % fqdn
+        print "Starting to configure %s" % to_provision['fqdn']
         try:
             output = subprocess.check_output([config['ansible_path'], '-i', 'cvp_provision', config['playbook']])
             print "Ansible completed configuration"
         except subprocess.CalledProcessError as e:
             print "Ansible provision failed for host %s due to %s" % i(fqdn, str(e))
+            # Ansible errored out so move device back
+            task = move_to_container(clnt, to_provision, config['target_container']) 
+            #cancel the task so we don't lose configs
+            clnt.api.cancel_task(task['data']['taskIds'][0])
             continue
 
 if __name__ == '__main__':
