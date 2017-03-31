@@ -25,6 +25,7 @@ options:
 """
 
 import re
+from jinja2 import meta
 import jinja2
 
 from ansible.module_utils.basic import AnsibleModule
@@ -123,6 +124,14 @@ def current_config(module, config):
     return config[block_start:block_end]
 
 
+def valid_template(port, template):
+    regex = r'^interface Ethernet%s' % port
+    match = re.match(regex, template, re.M)
+    if not match:
+        return False
+    return True
+
+
 def config_from_template(module):
     template_loader = jinja2.FileSystemLoader('./templates')
     env = jinja2.Environment(loader=template_loader,
@@ -131,8 +140,30 @@ def config_from_template(module):
     if not template:
         module.fail_json(msg=str('Could not find template - %s'
                                  % module.params['template']))
-    return template.render({'switch_port': module.params['switch_port'],
-                            'server_name': module.params['server_name']})
+
+    data = {'switch_port': module.params['switch_port'],
+            'server_name': module.params['server_name']}
+
+    temp_source = env.loader.get_source(env, module.params['template'])[0]
+    parsed_content = env.parse(temp_source)
+    temp_vars = list(meta.find_undeclared_variables(parsed_content))
+    template_has_vlan = False
+    if 'port_vlan' in temp_vars:
+        template_has_vlan = True
+
+    if template_has_vlan:
+        if module.params['port_vlan']:
+            data['port_vlan'] = module.params['port_vlan']
+        else:
+            module.fail_json(msg=str('Template %s requires a vlan. Please'
+                                     ' re-run with vlan number provided.'
+                                     % module.params['template']))
+
+    template = template.render(data)
+    if not valid_template(module.params['switch_port'], template):
+        module.fail_json(msg=str('Template content does not configure proper'
+                                 ' interface - %s' % template))
+    return template
 
 
 def updated_configlet_content(module, existing_config, new_config):
@@ -174,6 +205,7 @@ def main():
         server_name=dict(required=True),
         switch_name=dict(required=True),
         switch_port=dict(required=True),
+        port_vlan=dict(required=False, default=None),
         template=dict(require=True),
         state=dict(default='present', choices=['present', 'add', 'remove']),
         auto_run=dict(default=False, choices=[True, False]),
