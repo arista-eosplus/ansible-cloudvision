@@ -5,23 +5,67 @@ DOCUMENTATION = """
 module: cv_info
 version_added: "2.2"
 author: "EOS+ CS (ansible-dev@arista.com)"
-short_description: Gather Information about Cloudvision node.
+short_description:
+  - Provision server port by applying or removing template
+    configuration to configlet.
 description:
-  - Arista EOS configurations use a simple block indent file syntax
-    for segmenting configuration into sections.  This module provides
-    an implementation for working with eos configuration sections in
-    a deterministic way.  This module works with either CLI or eAPI
-    transports.
+  - This module allows a server team to provision server network ports for
+    new servers without having to access Arista CVP or asking the network team
+    to do it for them. Provide the information for connecting to CVP, switch
+    rack, port the new server is connected to, optional vlan, and an action
+    and the module will apply the configuration to the switch port via CVP.
+    Actions are add (applies template config to port),
+    remove (defaults the interface config) and
+    present (returns the current port config).
 options:
-  lines:
+  host:
     description:
-      - The ordered set of commands that should be configured in the
-        section.  The commands must be the exact same commands as found
-        in the device running-config.  Be sure to note the configuration
-        command syntax as some commands are automatically modified by the
-        device config parser.
-    required: false
-    default: null
+    required:
+    default:
+  port:
+    description:
+    required:
+    default:
+  protocol:
+    description:
+    required:
+    default:
+  username:
+    description:
+    required:
+    default:
+  password:
+    description:
+    required:
+    default:
+  server_name:
+    description:
+    required:
+    default:
+  switch_name:
+    description:
+    required:
+    default:
+  switch_port:
+    description:
+    required:
+    default:
+  port_vlan:
+    description:
+    required:
+    default:
+  template:
+    description:
+    required:
+    default:
+  state:
+    description:
+    required:
+    default:
+  auto_run:
+    description:
+    required:
+    default:
 """
 
 import re
