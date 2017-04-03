@@ -191,11 +191,7 @@ def config_from_template(module):
     temp_source = env.loader.get_source(env, module.params['template'])[0]
     parsed_content = env.parse(temp_source)
     temp_vars = list(meta.find_undeclared_variables(parsed_content))
-    template_has_vlan = False
     if 'port_vlan' in temp_vars:
-        template_has_vlan = True
-
-    if template_has_vlan:
         if module.params['port_vlan']:
             data['port_vlan'] = module.params['port_vlan']
         else:
