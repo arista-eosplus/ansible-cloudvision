@@ -2,7 +2,7 @@
 
 DOCUMENTATION = """
 ---
-module: cv_info
+module: cv_server_provision
 version_added: "2.2"
 author: "EOS+ CS (ansible-dev@arista.com)"
 short_description:
