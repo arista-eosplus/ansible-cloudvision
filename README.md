@@ -1,4 +1,5 @@
 # Ansible Role for Arista Cloudvision®
+This repository contains several proof of concept scripts and modules that demonstrate the ability for CVP to integrate with other configuration management tools. This repository focuses specifically on CVP/Ansible integrations.
 
 ## Requirements
 - [Arista Cloudvision](http://www.arista.com/en/products/eos/eos-cloudvision)
