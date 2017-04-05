@@ -2,8 +2,8 @@
 This repository contains several proof of concept scripts and modules that demonstrate the ability for CVP to integrate with other configuration management tools. This repository focuses specifically on CVP/Ansible integrations.
 
 ## Requirements
-- [Arista Cloudvision](http://www.arista.com/en/products/eos/eos-cloudvision)
-- [Cloudvision RestAPI Client](https://github.com/aristanetworks/cvprac)
+- [Arista Cloudvision (Version 2016.1.0 mimimum)](http://www.arista.com/en/products/eos/eos-cloudvision)
+- [Cloudvision RestAPI Client (Version 0.7.0 minimum)](https://github.com/aristanetworks/cvprac)
 
 ## Modules
 ### cv_info
@@ -80,6 +80,10 @@ Example:
         protocol: "{{ protocol }}"
         container: "newcontainer"
 ```
+
+## Support
+
+Please send questions to ansible-dev@arista.com.
 
 ## License
 
