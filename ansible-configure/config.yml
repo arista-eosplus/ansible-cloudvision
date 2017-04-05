@@ -1,12 +1,12 @@
 cvp_host:
-    - '10.81.111.8'
-cvp_user: cvpadmin
-cvp_pw: cvp123
+    - '<cvp host>'
+cvp_user: <username>
+cvp_pw: <password>
 target_container: Ansible
 provisioned_container: Provisioned
-image: 'vEOS-4.17.2F-lab'
-gw: '192.168.1.8'
-subnet_mask: 24
-ansible_path: '/home/eosplus/ansible-cloudvision/ansible/bin/ansible-playbook'
-playbook: leaf.yaml
+image: '<image bundle name>'
+gw: '<default gateway address>'
+subnet_mask: <subnet mask prefix len>
+ansible_path: '<path to ansible-playbook>'
+playbook: <playbook yaml file>
 
