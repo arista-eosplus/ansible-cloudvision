@@ -16,7 +16,7 @@ cd ansible-cloudvision
 ```
 #### Setup the config.yml file from the auto_deploy script
 ```
-cd cron
+cd auto_deploy
 vi config.yml
 
 ---
@@ -38,15 +38,17 @@ The `target_container` should match the name of the container thats configured o
 
 The `provisoned_container` should match the name of the container thats configured for ansible-configure script to monitor
 
+Note the same config file can be used for both the auto_deploy and the ansible_configure scripts
+
 #### Install cronjobs 
 
 The below will run the auto_deploy every minute and the ansible-configure script every 5 mintues
 ```console
-* * * * * python /path/to/ansible-cloudvision/cron/auto_deploy.py
-*/5 * * * * python /path/to/ansible-cloudvision/ansible-configure/ansible-configure.py
+* * * * * python /path/to/ansible-cloudvision/auto_deploy/auto_deploy.py
+*/5 * * * * python /path/to/ansible-cloudvision/ansible_configure/ansible_configure.py
 ```
 
-The `ansible-configure.py` script should be placed in the same directory with the playbook.  From there the normal Ansible convention can be used to obtain the neccesary needed for the configuration
+The `ansible_configure.py` script should be placed in the same directory with the playbook.  From there the normal Ansible convention can be used to obtain the neccesary needed for the configuration
 
 ### Use Case 2: Export CVP functionality to Ansible
 
@@ -57,8 +59,8 @@ cd cvp_modules
 ```
 #### Copy lib/ and templates/ directory to local playbook directory
 ``` 
-cp -r lib/ /path/to/ansible/playbook/
-cp -r template/ /path/to/ansible/playbook/ 
+cp  lib/ /path/to/ansible/playbook/
+cp  template/ /path/to/ansible/playbook/ 
 ```
 At this point you will be able to use the cvp_server_provision module in the playbook run.
 Please see the example test_server_provisoin.yml file for examples.

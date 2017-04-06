@@ -1,3 +1,4 @@
+---
 cvp_host:
     - '<cvp host>'
 cvp_user: <username>
@@ -7,4 +8,6 @@ provisioned_container: Provisioned
 image: '<image bundle name>'
 gw: '<default gateway address>'
 subnet_mask: <subnet mask prefix len>
+ansible_path: '<path to ansible-playbook>'
+playbook: <playbook yaml file>
 

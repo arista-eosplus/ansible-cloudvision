@@ -1,3 +1,4 @@
+---
 cvp_host:
     - '<cvp host>'
 cvp_user: <username>
