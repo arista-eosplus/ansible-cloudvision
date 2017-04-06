@@ -4,10 +4,64 @@ This repository contains several proof of concept scripts and modules that demon
 ## Requirements
 - [Arista Cloudvision (Version 2016.1.0 mimimum)](http://www.arista.com/en/products/eos/eos-cloudvision)
 - [Cloudvision RestAPI Client (Version 0.7.0 minimum)](https://github.com/aristanetworks/cvprac)
+- [Ansible (version 2.2 minimum)](https://github.com/ansible/ansible)
 
-## Instalation 
-### Use Case: 1
-### Use Case: 2
+## Installation 
+### Use Case 1: Ansible Controlled Configuration
+#### Clone the ansible-cloudvision repo
+
+```console
+git clone https://github.com/arista-eosplus/ansible-cloudvision.git 
+cd ansible-cloudvision
+```
+#### Setup the config.yml file from the auto_deploy script
+```
+cd cron
+vi config.yml
+
+---
+cvp_host:
+    - '<cvp host>'
+cvp_user: <username>
+cvp_pw: <password>
+target_container: Ansible
+provisioned_container: Provisioned
+image: '<image bundle name>'
+gw: '<default gateway address>'
+subnet_mask: <subnet mask prefix len>
+ansible_path: '<path to ansible-playbook>'
+playbook: <playbook yaml file>
+
+```
+
+The `target_container` should match the name of the container thats configured or nodes to be placed in waiting after they have been bootrapped and are waiting for ansible to play a full configuration
+
+The `provisoned_container` should match the name of the container thats configured for ansible-configure script to monitor
+
+#### Install cronjobs 
+
+The below will run the auto_deploy every minute and the ansible-configure script every 5 mintues
+```console
+* * * * * python /path/to/ansible-cloudvision/cron/auto_deploy.py
+*/5 * * * * python /path/to/ansible-cloudvision/ansible-configure/ansible-configure.py
+```
+
+The `ansible-configure.py` script should be placed in the same directory with the playbook.  From there the normal Ansible convention can be used to obtain the neccesary needed for the configuration
+
+### Use Case 2: Export CVP functionality to Ansible
+
+#### Clone git repo
+```console
+git clone https://github.com/arista-eosplus/ansible-cloudvision.git
+cd cvp_modules
+```
+#### Copy lib/ and templates/ directory to local playbook directory
+``` 
+cp -r lib/ /path/to/ansible/playbook/
+cp -r template/ /path/to/ansible/playbook/ 
+```
+At this point you will be able to use the cvp_server_provision module in the playbook run.
+Please see the example test_server_provisoin.yml file for examples.
 
 ## Modules
 ### cv_info
