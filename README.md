@@ -34,7 +34,7 @@ playbook: <playbook yaml file>
 
 ```
 
-The `target_container` should match the name of the container thats configured or nodes to be placed in waiting after they have been bootrapped and are waiting for ansible to play a full configuration
+The `target_container` should match the name of the container thats configured for nodes to be placed in waiting after they have been bootrapped and are waiting for ansible to play a full configuration
 
 The `provisoned_container` should match the name of the container thats configured for ansible-configure script to monitor
 
