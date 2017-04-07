@@ -59,7 +59,7 @@ def main():
         with open(options.config) as f:
             config = yaml.safe_load(f)
     except IOError:
-        logging.info(Config file %s not found' % options.config)
+        logging.info('Config file %s not found' % options.config)
         exit()
 
     clnt = CvpClient()
@@ -84,7 +84,7 @@ def main():
     try:
         ansible_path = config['ansible_path']
     except:
-        ansible_path = '/usr/bin/ansible'
+        ansible_path = '/usr/bin/ansible-playbook'
                      
     devices = clnt.api.get_devices_in_container(target)
      
@@ -102,13 +102,13 @@ def main():
                      
         try:
             logging.info("Staring to configure %s via Ansible" % to_provision['fqdn'])
-            output = subprocess.check_output([ansible_path, '-i', "-%s" % verbosity, 
-                                              'cvp_provision', config['playbook']])
+            output = subprocess.check_output([ansible_path, '-i', 'cvp_provision' 
+                                              '-%s' % verbosity, config['playbook']])
             logging.info(output)
             logging.info("Ansible completed configuration")
                      
         except subprocess.CalledProcessError as e:
-            logging.info("Ansible provision failed for host %s due to %s" % i(fqdn, str(e)))
+            logging.info("Ansible provision failed for host %s due to %s" % i(to_provision['fqdn'], str(e)))
             # Ansible errored out so move device back
             task = move_to_container(clnt, to_provision, target) 
             #cancel the task so we don't lose configs
