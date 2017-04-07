@@ -42,7 +42,7 @@ Note the same config file can be used for both the auto_deploy and the ansible_c
 
 #### Install cronjobs 
 
-The below will run the auto_deploy every minute and the ansible-configure script every 5 mintues
+The lines below will run the auto_deploy every minute and the ansible-configure script every 5 mintues
 ```console
 * * * * * python /path/to/ansible-cloudvision/auto_deploy/auto_deploy.py
 */5 * * * * python /path/to/ansible-cloudvision/ansible_configure/ansible_configure.py
