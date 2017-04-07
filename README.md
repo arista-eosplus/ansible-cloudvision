@@ -57,10 +57,10 @@ The `ansible_configure.py` script should be placed in the same directory with th
 git clone https://github.com/arista-eosplus/ansible-cloudvision.git
 cd cvp_modules
 ```
-#### Copy lib/ and templates/ directory to local playbook directory
+#### Copy library/ and templates/ directory to local playbook directory
 ``` 
-cp  lib/ /path/to/ansible/playbook/
-cp  template/ /path/to/ansible/playbook/ 
+cp  library/ /path/to/ansible/playbook/
+cp  templates/ /path/to/ansible/playbook/ 
 ```
 At this point you will be able to use the cvp_server_provision module in the playbook run.
 Please see the example test_server_provisoin.yml file for examples.
