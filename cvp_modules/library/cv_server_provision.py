@@ -132,6 +132,16 @@ def switch_info(module):
     return switch_info
 
 
+def switch_in_compliance(module, sw_info):
+    compliance = module.client.api.check_compliance(sw_info['key'],
+                                                    sw_info['type'])
+    if compliance['complianceCode'] != '0000':
+        module.fail_json(msg=str('Switch %s is not in compliance. Returned'
+                                 ' compliance code %s.'
+                                 % (sw_info['fqdn'],
+                                    compliance['complianceCode'])))
+
+
 def server_configurable_configlet(module):
     switch_name = module.params['switch_name']
     device_info = module.client.api.get_device_by_name(switch_name)
@@ -288,6 +298,7 @@ def main():
 
     try:
         result['switchInfo'] = switch_info(module)
+        switch_in_compliance(module, result['switchInfo'])
         switch_configlet = server_configurable_configlet(module)
         if not switch_configlet:
             module.fail_json(msg=str('Switch %s has no configurable server'
