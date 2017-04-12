@@ -298,7 +298,8 @@ def main():
 
     try:
         result['switchInfo'] = switch_info(module)
-        switch_in_compliance(module, result['switchInfo'])
+        if module.params['state'] in ['add', 'remove']:
+            switch_in_compliance(module, result['switchInfo'])
         switch_configlet = server_configurable_configlet(module)
         if not switch_configlet:
             module.fail_json(msg=str('Switch %s has no configurable server'
@@ -313,7 +314,7 @@ def main():
         result['taskCreated'] = False
         result['taskExecuted'] = False
         result.update(configlet_action(module, switch_configlet))
-        if module.params['auto_run']:
+        if module.params['auto_run'] and module.params['state'] != 'present':
             task_id = configlet_update_task(module)
             if task_id:
                 result['taskId'] = task_id
