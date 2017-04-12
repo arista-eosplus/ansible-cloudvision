@@ -99,6 +99,7 @@ options:
 """
 
 import re
+import time
 from jinja2 import meta
 import jinja2
 
@@ -264,13 +265,25 @@ def updated_configlet_content(module, existing_config, new_config):
 
 
 def configlet_update_task(module):
-    device_info = switch_info(module)
-    if ('taskIdList' in device_info) and (len(device_info['taskIdList']) > 0):
-        for task in device_info['taskIdList']:
-            if ('Configlet Assign' in task['description'] and
-                    task['data']['WORKFLOW_ACTION'] == 'Configlet Push'):
+    for num in range(3):
+        device_info = switch_info(module)
+        if (('taskIdList' in device_info) and
+                (len(device_info['taskIdList']) > 0)):
+            for task in device_info['taskIdList']:
+                if ('Configlet Assign' in task['description'] and
+                        task['data']['WORKFLOW_ACTION'] == 'Configlet Push'):
                     return task['workOrderId']
+        time.sleep(1)
     return None
+
+
+def wait_for_task_completion(module, task):
+    task_complete = False
+    while not task_complete:
+        task_info = module.client.api.get_task_by_id(task)
+        if task_info['workOrderUserDefinedStatus'] == 'Completed':
+            return True
+        time.sleep(2)
 
 
 def main():
@@ -313,13 +326,21 @@ def main():
         result['portConfigurable'] = True
         result['taskCreated'] = False
         result['taskExecuted'] = False
+        result['taskCompleted'] = False
         result.update(configlet_action(module, switch_configlet))
         if module.params['auto_run'] and module.params['state'] != 'present':
             task_id = configlet_update_task(module)
             if task_id:
                 result['taskId'] = task_id
+                note = ('Update config on %s with %s action from Ansible.'
+                        % (
+                        module.params['switch_name'], module.params['state']))
+                module.client.api.add_note_to_task(task_id, note)
                 module.client.api.execute_task(task_id)
                 result['taskExecuted'] = True
+                task_completed = wait_for_task_completion(module, task_id)
+                if task_completed:
+                    result['taskCompleted'] = True
             else:
                 result['taskCreated'] = False
         result.update(module.params)
