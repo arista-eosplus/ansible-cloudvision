@@ -68,7 +68,7 @@ def main():
     #get the devices in the undefined container
     devices = clnt.api.get_devices_in_container('Undefined') 
 
-    if len(devices) == 0:
+    if devices is None:
         print 'No devices in undefined container.  Exiting'
         exit()
     else:
