@@ -108,7 +108,7 @@ def main():
             logging.info("Ansible completed configuration")
                      
         except subprocess.CalledProcessError as e:
-            logging.info("Ansible provision failed for host %s due to %s" % i(to_provision['fqdn'], str(e)))
+            logging.info("Ansible provision failed for host %s due to %s" % (to_provision['fqdn'], str(e)))
             # Ansible errored out so move device back
             task = move_to_container(clnt, to_provision, target) 
             #cancel the task so we don't lose configs
