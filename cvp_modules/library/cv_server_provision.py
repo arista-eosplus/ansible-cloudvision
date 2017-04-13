@@ -333,8 +333,8 @@ def main():
             if task_id:
                 result['taskId'] = task_id
                 note = ('Update config on %s with %s action from Ansible.'
-                        % (
-                        module.params['switch_name'], module.params['state']))
+                        % (module.params['switch_name'],
+                           module.params['state']))
                 module.client.api.add_note_to_task(task_id, note)
                 module.client.api.execute_task(task_id)
                 result['taskExecuted'] = True
