@@ -1,0 +1,44 @@
+---
+- hosts: cvp
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: Provision Server Example. Remove or edit this task before running.
+      cv_server_provision:
+        host: "{{ host }}"
+        username: "{{ username }}"
+        password: "{{ password }}"
+        protocol: "{{ protocol }}"
+        server_name: "{{ server_name }}"
+        switch_name: "{{ switch_name }}"
+        switch_port: "{{ switch_port }}"
+        port_vlan: "{{ port_vlan }}"
+        template: "{{ template_file_name }}"
+        state: add, remove or present
+        auto_run: True or False
+
+    - name: Provision Server Add
+      cv_server_provision:
+        host: "{{ inventory_hostname }}"
+        username: "{{ username }}"
+        password: "{{ password }}"
+        protocol: "{{ protocol }}"
+        server_name: "Example_Server_Name"
+        switch_name: "Example_Switch_Name"
+        switch_port: "4"
+        port_vlan: "22"
+        template: "single_attached_vlan.j2"
+        state: add
+        auto_run: True
+
+    - name: Provision Server Present
+      cv_server_provision:
+        host: "{{ inventory_hostname }}"
+        username: "{{ username }}"
+        password: "{{ password }}"
+        protocol: "{{ protocol }}"
+        server_name: "Example_Server_Name"
+        switch_name: "Example_Switch_Name"
+        switch_port: "4"
+        state: present

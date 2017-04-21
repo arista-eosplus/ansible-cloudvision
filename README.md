@@ -59,11 +59,11 @@ cd cvp_modules
 ```
 #### Copy library/ and templates/ directory to local playbook directory
 ``` 
-cp  library/ /path/to/ansible/playbook/
-cp  templates/ /path/to/ansible/playbook/ 
+cp -r library/ /path/to/ansible/playbook/
+cp -r templates/ /path/to/ansible/playbook/
 ```
 At this point you will be able to use the cvp_server_provision module in the playbook run.
-Please see the example test_server_provisoin.yml file for examples.
+Please see the example test_server_provisoin.yaml file for examples.
 
 ## Modules
 ### cv_info
