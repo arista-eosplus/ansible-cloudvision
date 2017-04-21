@@ -63,7 +63,7 @@ cp -r library/ /path/to/ansible/playbook/
 cp -r templates/ /path/to/ansible/playbook/
 ```
 At this point you will be able to use the cvp_server_provision module in the playbook run.
-Please see the example test_server_provisoin.yaml file for examples.
+Please see the example test_server_provision.yaml file for examples.
 
 ## Modules
 ### cv_info
