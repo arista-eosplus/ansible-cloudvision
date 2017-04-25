@@ -281,8 +281,13 @@ def wait_for_task_completion(module, task):
     task_complete = False
     while not task_complete:
         task_info = module.client.api.get_task_by_id(task)
-        if task_info['workOrderUserDefinedStatus'] == 'Completed':
+        task_status = task_info['workOrderUserDefinedStatus']
+        if task_status == 'Completed':
             return True
+        elif task_status in ['Failed', 'Cancelled']:
+            module.fail_json(msg=str('Task %s has reported status %s. Please'
+                                     ' consult the CVP admins for more'
+                                     ' information.' % (task, task_status)))
         time.sleep(2)
 
 
