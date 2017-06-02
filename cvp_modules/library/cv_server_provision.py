@@ -30,14 +30,19 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 # IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-DOCUMENTATION = """
+
+ANSIBLE_METADATA = {'metadata_version': '1.0',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
+
+DOCUMENTATION = '''
 ---
 module: cv_server_provision
-version_added: "2.2"
+version_added: "2.4"
 author: "EOS+ CS (ansible-dev@arista.com)"
 short_description:
   - Provision server port by applying or removing template
-    configuration to configlet.
+    configuration to a configlet
 description:
   - This module allows a server team to provision server network ports for
     new servers without having to access Arista CVP or asking the network team
@@ -46,57 +51,245 @@ description:
     and the module will apply the configuration to the switch port via CVP.
     Actions are add (applies template config to port),
     remove (defaults the interface config) and
-    present (returns the current port config).
+    show (returns the current port config).
 options:
   host:
     description:
-    required:
-    default:
+      - The hostname or IP address of the CVP node being connected to.
+    required: true
   port:
     description:
-    required:
-    default:
+      - The port number to use when making API calls to the CVP node. This
+        will default to the default port for the specified protocol. Port 80
+        for http and port 443 for https.
+    default: None
   protocol:
     description:
-    required:
-    default:
+      - The protocol to use when making API calls to CVP. CVP defaults to https
+        and newer versions of CVP no longer support http.
+    default: https
+    choices: https, http
   username:
     description:
-    required:
-    default:
+      - The user that will be used to connect to CVP for making API calls.
+    required: true
   password:
     description:
-    required:
-    default:
+      - The password of the user that will be used to connect to CVP for API
+        calls.
+    required: true
   server_name:
     description:
-    required:
-    default:
+      - The hostname or identifier for the server that is having it's switch
+        port provisioned.
+    required: true
   switch_name:
     description:
-    required:
-    default:
+      - The hostname of the switch is being configured for the server being
+        provisioned.
+    required: true
   switch_port:
     description:
-    required:
-    default:
+      - The physical port number on the switch that the new server is
+        connected to.
+    required: true
   port_vlan:
     description:
-    required:
-    default:
+      - The vlan that should be applied to the port for this server.
+        This parameter is dependent on a proper template that supports single
+        vlan provisioning with it. If a port vlan is specified by the template
+        specified does not support this the module will exit out with no
+        changes. If a template is specified that requires a port vlan but no
+        port vlan is specified the module will exit out with no changes.
+    default: None
   template:
     description:
-    required:
-    default:
-  state:
+      - A path to a Jinja formatted template file that contains the
+        configuration block that will be applied to the specified switch port.
+        This template will have variable fields replaced by the module before
+        being applied to the switch configuration.
+    required: true
+  action:
     description:
-    required:
-    default:
+      - The action for the module to take. The actions are add, which applies
+        the specified template config to port, remove, which defaults the
+        specified interface configuration, and show, which will return the
+        current port configuration with no changes.
+    default: show
+    choices: show, add, remove
   auto_run:
     description:
-    required:
-    default:
-"""
+      - Flag that determines whether or not the module will execute the CVP
+        task spawned as a result of changes to a switch configlet. When an
+        add or remove action is taken which results in a change to a switch
+        configlet, CVP will spawn a task that needs to be executed for the
+        configuration to be applied to the switch. If this option is True then
+        the module will determined the task number created by the configuration
+        change, execute it and wait for the task to complete. If the option
+        is False then the task will remain in the Pending state in CVP for
+        a network administrator to review and execute.
+    default: False
+    type: bool
+notes:
+requirements:
+  Jinja2
+  cvprac >= 0.7.0
+'''
+
+EXAMPLES = '''
+- name: Get current configuration for interface Ethernet2
+  cv_server_provision:
+    host: cvp_node
+    username: cvp_user
+    password: cvp_pass
+    protocol: https
+    server_name: new_server
+    switch_name: eos_switch_1
+    switch_port: 2
+    template: template_file.j2
+    action: show
+
+- name: Remove existing configuration from interface Ethernet2. Run task.
+  cv_server_provision:
+    host: cvp_node
+    username: cvp_user
+    password: cvp_pass
+    protocol: https
+    server_name: new_server
+    switch_name: eos_switch_1
+    switch_port: 2
+    template: template_file.j2
+    action: remove
+    auto_run: True
+
+- name: Add template configuration to interface Ethernet2. No VLAN. Run task.
+  cv_server_provision:
+    host: cvp_node
+    username: cvp_user
+    password: cvp_pass
+    protocol: https
+    server_name: new_server
+    switch_name: eos_switch_1
+    switch_port: 2
+    template: single_attached_trunk.j2
+    action: add
+    auto_run: True
+
+- name: Add template with VLAN configuration to interface Ethernet2. Run task.
+  cv_server_provision:
+    host: cvp_node
+    username: cvp_user
+    password: cvp_pass
+    protocol: https
+    server_name: new_server
+    switch_name: eos_switch_1
+    switch_port: 2
+    port_vlan: 22
+    template: single_attached_vlan.j2
+    action: add
+    auto_run: True
+'''
+
+RETURN = '''
+changed:
+  description: Signifies if a change was made to the configlet
+  returned: success
+  type: bool
+  sample: true
+currentConfigBlock:
+  description: The current config block for the user specified interface
+  returned: when action = show
+  type: string
+  sample: "interface Ethernet4\n!"
+newConfigBlock:
+  description: The new config block for the user specified interface
+  returned: when action = add or remove
+  type: string
+  sample: "interface Ethernet3\n    description example\n    no switchport\n!"
+oldConfigBlock:
+  description: The current config block for the user specified interface
+               before any changes are made
+  returned: when action = add or remove
+  type: string
+  sample: "interface Ethernet3\n!"
+fullConfig:
+  description: The full config of the configlet after being updated
+  returned: when action = add or remove
+  type: string
+  sample: "!\ninterface Ethernet3\n!\ninterface Ethernet4\n!"
+updateConfigletResponse:
+  description: Response returned from CVP when configlet update is triggered
+  returned: when action = add or remove and configuration changes
+  type: string
+  sample: "Configlet veos1-server successfully updated and task initiated."
+portConfigurable:
+  description: Signifies if the user specified port has an entry in the
+               configlet that Ansible has access to
+  returned: success
+  type: bool
+  sample: true
+switchConfigurable:
+  description: Signifies if the user specified switch has a configlet
+               applied to it that CVP is allowed to edit
+  returned: success
+  type: bool
+  sample: true
+switchInfo:
+  description: Information from CVP describing the switch being configured
+  returned: success
+  type: dictionary
+  sample: {"architecture": "i386",
+           "bootupTimeStamp": 1491264298.21,
+           "complianceCode": "0000",
+           "complianceIndication": "NONE",
+           "deviceInfo": "Registered",
+           "deviceStatus": "Registered",
+           "fqdn": "veos1",
+           "hardwareRevision": "",
+           "internalBuildId": "7e4fea8f-1fa7-4ec8-91a9-39d96fdc402e",
+           "internalVersion": "4.17.1F-3465508.4171F",
+           "ipAddress": "192.168.1.20",
+           "isDANZEnabled": "no",
+           "isMLAGEnabled": "no",
+           "key": "00:50:56:5d:e5:e0",
+           "lastSyncUp": 1496432895799,
+           "memFree": 472976,
+           "memTotal": 1893460,
+           "modelName": "vEOS",
+           "parentContainerId": "container_13_5776759195930",
+           "serialNumber": "",
+           "systemMacAddress": "00:50:56:5d:e5:e0",
+           "taskIdList": [],
+           "tempAction": null,
+           "type": "netelement",
+           "unAuthorized": false,
+           "version": "4.17.1F",
+           "ztpMode": "false"}
+taskCompleted:
+  description: Signifies if the task created and executed has completed successfully
+  returned: when action = add or remove, and auto_run = true,
+            and configuration changes
+  type: bool
+  sample: true
+taskCreated:
+  description: Signifies if a task was created due to configlet changes
+  returned: when action = add or remove, and auto_run = true or false,
+            and configuration changes
+  type: bool
+  sample: true
+taskExecuted:
+  description: Signifies if the automation executed the spawned task
+  returned: when action = add or remove, and auto_run = true,
+            and configuration changes
+  type: bool
+  sample: true
+taskId:
+  description: The task ID created by CVP because of changes to configlet
+  returned: when action = add or remove, and auto_run = true or false,
+            and configuration changes
+  type: string
+  sample: "500"
+'''
 
 import re
 import time
@@ -109,22 +302,30 @@ from cvprac.cvp_client_errors import CvpLoginError, CvpApiError
 
 
 def connect(module):
+    ''' Connects to CVP device using user provided credentials from playbook.
+
+    :param module: Ansible module with parameters and client connection.
+    :return: CvpClient object with connection instantiated.
+    '''
     client = CvpClient()
     try:
         client.connect([module.params['host']],
                        module.params['username'],
                        module.params['password'],
                        protocol=module.params['protocol'],
-                       port=module.params['port'],
-                       )
+                       port=module.params['port'])
     except CvpLoginError, e:
         module.fail_json(msg=str(e))
-
     return client
 
 
 def switch_info(module):
-    # Ensure the switch exists
+    ''' Get dictionary of switch info from CVP.
+
+    :param module: Ansible module with parameters and client connection.
+    :return: Dict of switch info from CVP or exit with failure if no
+             info for device is found.
+    '''
     switch_name = module.params['switch_name']
     switch_info = module.client.api.get_device_by_name(switch_name)
     if not switch_info:
@@ -134,6 +335,12 @@ def switch_info(module):
 
 
 def switch_in_compliance(module, sw_info):
+    ''' Check if switch is currently in compliance.
+
+    :param module: Ansible module with parameters and client connection.
+    :param sw_info: Dict of switch info.
+    :return: Nothing or exit with failure if device is not in compliance.
+    '''
     compliance = module.client.api.check_compliance(sw_info['key'],
                                                     sw_info['type'])
     if compliance['complianceCode'] != '0000':
@@ -143,38 +350,62 @@ def switch_in_compliance(module, sw_info):
                                     compliance['complianceCode'])))
 
 
-def server_configurable_configlet(module):
-    switch_name = module.params['switch_name']
-    device_info = module.client.api.get_device_by_name(switch_name)
-    if not device_info:
-        module.fail_json(msg=str("Device with name '%s' does not exist."
-                                 % switch_name))
-    configlet_name = switch_name + '-server'
+def server_configurable_configlet(module, sw_info):
+    ''' Check CVP that the user specified switch has a configlet assigned to
+        it that Ansible is allowed to edit.
+
+    :param module: Ansible module with parameters and client connection.
+    :param sw_info: Dict of switch info.
+    :return: Dict of configlet information or None.
+    '''
+    configurable_configlet = None
+    configlet_name = module.params['switch_name'] + '-server'
     switch_configlets = module.client.api.get_configlets_by_device_id(
-        device_info['key'])
+        sw_info['key'])
     for configlet in switch_configlets:
         if configlet['name'] == configlet_name:
-            return configlet
-    return None
+            configurable_configlet = configlet
+    return configurable_configlet
 
 
 def port_configurable(module, configlet):
+    ''' Check configlet if the user specified port has a configuration entry
+        in the configlet to determine if Ansible is allowed to configure the
+        port on this switch.
+
+    :param module: Ansible module with parameters and client connection.
+    :param configlet: Dict of configlet info.
+    :return: True or False.
+    '''
+    configurable = False
     regex = r'^interface Ethernet%s' % module.params['switch_port']
     for config_line in configlet['config'].split('\n'):
         if re.match(regex, config_line):
-            return True
-    return False
+            configurable = True
+    return configurable
 
 
 def configlet_action(module, configlet):
+    ''' Take appropriate action based on current state of device and user
+        requested action.
+
+        Return current config block for specified port if action is show.
+
+        If action is add or remove make the appropriate changes to the
+        configlet and return the associated information.
+
+    :param module: Ansible module with parameters and client connection.
+    :param configlet: Dict of configlet info.
+    :return: Dict of information to updated results with.
+    '''
     result = dict()
     existing_config = current_config(module, configlet['config'])
-    if module.params['state'] == 'present':
+    if module.params['action'] == 'show':
         result['currentConfigBlock'] = existing_config
         return result
-    elif module.params['state'] == 'add':
+    elif module.params['action'] == 'add':
         result['newConfigBlock'] = config_from_template(module)
-    elif module.params['state'] == 'remove':
+    elif module.params['action'] == 'remove':
         result['newConfigBlock'] = ('interface Ethernet%s\n!'
                                     % module.params['switch_port'])
     result['oldConfigBlock'] = existing_config
@@ -193,6 +424,13 @@ def configlet_action(module, configlet):
 
 
 def current_config(module, config):
+    ''' Parse the full port configuration for the user specified port out of
+        the full configlet configuration and return as a string.
+
+    :param module: Ansible module with parameters and client connection.
+    :param config: Full config to parse specific port config from.
+    :return: String of current config block for user specified port.
+    '''
     regex = r'^interface Ethernet%s' % module.params['switch_port']
     match = re.search(regex, config, re.M)
     if not match:
@@ -210,14 +448,30 @@ def current_config(module, config):
 
 
 def valid_template(port, template):
+    ''' Test if the user provided Jinja template is valid.
+
+    :param port: User specified port.
+    :param template: Contents of Jinja template.
+    :return: True or False
+    '''
+    valid = True
     regex = r'^interface Ethernet%s' % port
     match = re.match(regex, template, re.M)
     if not match:
-        return False
-    return True
+        valid = False
+    return valid
 
 
 def config_from_template(module):
+    ''' Load the Jinja template and apply user provided parameters in necessary
+        places. Fail if template is not found. Fail if rendered template does
+        not reference the correct port. Fail if the template requires a VLAN
+        but the user did not provide one with the port_vlan parameter.
+
+    :param module: Ansible module with parameters and client connection.
+    :return: String of Jinja template rendered with parameters or exit with
+             failure.
+    '''
     template_loader = jinja2.FileSystemLoader('./templates')
     env = jinja2.Environment(loader=template_loader,
                              undefined=jinja2.DebugUndefined)
@@ -248,6 +502,15 @@ def config_from_template(module):
 
 
 def updated_configlet_content(module, existing_config, new_config):
+    ''' Update the configlet configuration with the new section for the port
+        specified by the user.
+
+    :param module: Ansible module with parameters and client connection.
+    :param existing_config: String of current configlet configuration.
+    :param new_config: String of configuration for user specified port to
+                       replace in the existing config.
+    :return: String of the full updated configuration.
+    '''
     regex = r'^interface Ethernet%s' % module.params['switch_port']
     match = re.search(regex, existing_config, re.M)
     if not match:
@@ -265,6 +528,14 @@ def updated_configlet_content(module, existing_config, new_config):
 
 
 def configlet_update_task(module):
+    ''' Poll device info of switch from CVP up to three times to see if the
+        configlet updates have spawned a task. It sometimes takes a second for
+        the task to be spawned after configlet updates. If a task is found
+        return the task ID. Otherwise return None.
+
+    :param module: Ansible module with parameters and client connection.
+    :return: Task ID or None.
+    '''
     for num in range(3):
         device_info = switch_info(module)
         if (('taskIdList' in device_info) and
@@ -278,6 +549,13 @@ def configlet_update_task(module):
 
 
 def wait_for_task_completion(module, task):
+    ''' Poll CVP for the executed task to complete. There is currently no
+        timeout. Exits with failure if task status is Failed or Cancelled.
+
+    :param module: Ansible module with parameters and client connection.
+    :param task: Task ID to poll for completion.
+    :return: True or exit with failure if task is cancelled or fails.
+    '''
     task_complete = False
     while not task_complete:
         task_info = module.client.api.get_task_by_id(task)
@@ -296,7 +574,7 @@ def main():
     """
     argument_spec = dict(
         host=dict(required=True),
-        port=dict(type='list', default=None),
+        port=dict(required=False, default=None),
         protocol=dict(default='https', choices=['http', 'https']),
         username=dict(required=True),
         password=dict(required=True),
@@ -305,9 +583,8 @@ def main():
         switch_port=dict(required=True),
         port_vlan=dict(required=False, default=None),
         template=dict(require=True),
-        state=dict(default='present', choices=['present', 'add', 'remove']),
-        auto_run=dict(default=False, choices=[True, False]),
-    )
+        action=dict(default='show', choices=['show', 'add', 'remove']),
+        auto_run=dict(type='bool', default=False))
 
     module = AnsibleModule(argument_spec=argument_spec,
                            supports_check_mode=False)
@@ -316,9 +593,10 @@ def main():
 
     try:
         result['switchInfo'] = switch_info(module)
-        if module.params['state'] in ['add', 'remove']:
+        if module.params['action'] in ['add', 'remove']:
             switch_in_compliance(module, result['switchInfo'])
-        switch_configlet = server_configurable_configlet(module)
+        switch_configlet = server_configurable_configlet(module,
+                                                         result['switchInfo'])
         if not switch_configlet:
             module.fail_json(msg=str('Switch %s has no configurable server'
                                      ' ports.' % module.params['switch_name']))
@@ -333,13 +611,13 @@ def main():
         result['taskExecuted'] = False
         result['taskCompleted'] = False
         result.update(configlet_action(module, switch_configlet))
-        if module.params['auto_run'] and module.params['state'] != 'present':
+        if module.params['auto_run'] and module.params['action'] != 'show':
             task_id = configlet_update_task(module)
             if task_id:
                 result['taskId'] = task_id
                 note = ('Update config on %s with %s action from Ansible.'
                         % (module.params['switch_name'],
-                           module.params['state']))
+                           module.params['action']))
                 module.client.api.add_note_to_task(task_id, note)
                 module.client.api.execute_task(task_id)
                 result['taskExecuted'] = True
@@ -348,7 +626,6 @@ def main():
                     result['taskCompleted'] = True
             else:
                 result['taskCreated'] = False
-        result.update(module.params)
     except CvpApiError, e:
         module.fail_json(msg=str(e))
 
