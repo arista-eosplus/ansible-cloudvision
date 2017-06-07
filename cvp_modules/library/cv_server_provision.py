@@ -39,7 +39,7 @@ DOCUMENTATION = '''
 ---
 module: cv_server_provision
 version_added: "2.4"
-author: "EOS+ CS (ansible-dev@arista.com)"
+author: "EOS+ CS (ansible-dev@arista.com) (@mharista)"
 short_description:
   - Provision server port by applying or removing template
     configuration to a configlet
@@ -577,7 +577,7 @@ def main():
         port=dict(required=False, default=None),
         protocol=dict(default='https', choices=['http', 'https']),
         username=dict(required=True),
-        password=dict(required=True),
+        password=dict(required=True, no_log=True),
         server_name=dict(required=True),
         switch_name=dict(required=True),
         switch_port=dict(required=True),
