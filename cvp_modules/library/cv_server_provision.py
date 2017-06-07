@@ -41,8 +41,8 @@ module: cv_server_provision
 version_added: "2.4"
 author: "EOS+ CS (ansible-dev@arista.com) (@mharista)"
 short_description:
-  - Provision server port by applying or removing template
-    configuration to a configlet
+    Provision server port by applying or removing template configuration to a
+    configlet
 description:
   - This module allows a server team to provision server network ports for
     new servers without having to access Arista CVP or asking the network team
@@ -68,7 +68,7 @@ options:
       - The protocol to use when making API calls to CVP. CVP defaults to https
         and newer versions of CVP no longer support http.
     default: https
-    choices: https, http
+    choices: [https, http]
   username:
     description:
       - The user that will be used to connect to CVP for making API calls.
@@ -116,7 +116,7 @@ options:
         specified interface configuration, and show, which will return the
         current port configuration with no changes.
     default: show
-    choices: show, add, remove
+    choices: [show, add, remove]
   auto_run:
     description:
       - Flag that determines whether or not the module will execute the CVP
@@ -131,9 +131,7 @@ options:
     default: False
     type: bool
 notes:
-requirements:
-  Jinja2
-  cvprac >= 0.7.0
+requirements: [Jinja2, cvprac >= 0.7.0]
 '''
 
 EXAMPLES = '''
