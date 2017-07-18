@@ -1,0 +1,18 @@
+---
+# A list of switches information
+- SPINE2:
+   mac: "11:11:22:22:33:33"
+   sn: ABC12345678
+   hostname: MLP-QA-SPINE2
+   mgmt-ip: "192.168.1.200"
+- LEAF1:
+   mac: "55:55:22:22:33:33"
+   sn: ABC87654321
+   hostname: MLP-QA-LEAF1
+   mgmt-ip: "192.168.1.201" 
+- LEAF2:
+   mac: 44:4C:A8:B8:5F:12
+   sn: JAS16480025
+   hostname: MLP-QA-LEAF2
+   mgmt-ip: 172.28.197.220
+   

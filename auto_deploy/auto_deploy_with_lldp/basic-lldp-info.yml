@@ -1,0 +1,37 @@
+---
+# A list of basic requested cabling information for each switch
+- "MLP-QA-SPINE2":
+   Ethernet1:
+    neighbor-device-id: yv527
+    neighbor-port-id: Ethernet1
+   Ethernet2:
+    neighbor-device-id: cp691
+    neighbor-port-id: Ethernet1    
+    
+- LEAF1:
+   Ma1:
+    neighbor-device-id: perfqa-leaf4
+    neighbor-port-id: Eth1/39
+   Eth50/1:
+    neighbor-device-id: MLP-QA-SPINE2
+    neighbor-port-id: Ethernet1/1    
+   Eth53/1:
+    neighbor-device-id: MLP-QA-LEAF2
+    neighbor-port-id: Ethernet53/1
+   Eth54/1:
+    neighbor-device-id: MLP-QA-LEAF2
+    neighbor-port-id: Ethernet54/1    
+
+- LEAF2:
+   Ma1:
+    neighbor-device-id: perfqa-leaf4
+    neighbor-port-id: Eth1/40
+   Eth50/1:
+    neighbor-device-id: MLP-QA-SPINE2
+    neighbor-port-id: Ethernet2/1   
+   Eth53/1:
+    neighbor-device-id: MLP-QA-LEAF1
+    neighbor-port-id: Ethernet53/1
+   Eth54/1:
+    neighbor-device-id: MLP-QA-LEAF1
+    neighbor-port-id: Ethernet54/1        

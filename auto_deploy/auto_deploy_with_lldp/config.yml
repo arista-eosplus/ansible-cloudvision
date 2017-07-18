@@ -1,0 +1,13 @@
+---
+cvp_host:
+    - '10.81.111.9'
+cvp_user: cvpadmin
+cvp_pw: cvp123
+target_container: Ansible
+provisioned_container: Provisioned
+gw: "192.168.1.9"
+fqdn: "aristanetworks.com"
+subnet_mask: 24
+ansible_path: '<path to ansible-playbook>'
+playbook: <playbook yaml file>
+

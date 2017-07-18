@@ -1,0 +1,18 @@
+---
+# A list of basic requested cabling information for each switch
+- "MLP-QA-LEAF1":
+   Ethernet1:
+    neighbor-device-id: yv527
+    neighbor-port-id: Ethernet1
+   Ethernet2:
+    neighbor-device-id: c91
+    neighbor-port-id: Ethernet1    
+    
+- "MLP-QA-LEAF2":
+   Management1:
+    neighbor-device-id: perfqa-leaf4
+    neighbor-port-id: Ethernet1/39
+   Ethernet54/1:
+    neighbor-device-id: MLP-QA-LEAF2
+    neighbor-port-id: Ethernet54/1    
+
