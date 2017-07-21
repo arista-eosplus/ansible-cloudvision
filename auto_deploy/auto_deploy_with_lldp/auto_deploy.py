@@ -173,9 +173,9 @@ def main():
     for info in fyi:
         for key, value in info.iteritems():
             if 'spine' in key.lower():
-                node_type = 'spine'
+                node_type = 'SPINE'
             elif 'leaf' in key.lower():
-                node_type = 'leaf'
+                node_type = 'LEAF'
             try:
                 info_nodes.append(Node(ip=value['mgmt-ip'], 
                                        sn=value['sn'],
@@ -192,6 +192,7 @@ def main():
     #get the devices in the undefined container
     devices = clnt.api.get_devices_in_container('Undefined') 
     no_matches = []
+    nodes_with_tasks = []
 
     if devices is None:
         print 'No devices in undefined container.  Exiting'
@@ -204,74 +205,68 @@ def main():
             to_proceed = True
             match = find_node_match(node, info_nodes)  
             if match is not None:
-                #generate pyeapi Node to validate cabling
+                #have the netElement need to make the ma1 configlet
+                sn = node['systemMacAddress']
+                configlet = make_configlet(match, config)
+                name = match.hostname + '-MA1-CONFIG'
                 try:
-                    con = pyeapi.client.connect(host=node['ipAddress'],
-                                                 username=config['cvp_user'],
-                                                 password=config['cvp_pw'],
-                                                 return_node=True)
-                except:
-                    print 'unable to connect to %s via %s' % (node['systemMacAddress'], node['ipAddress'])
-                    to_proceed = False
-                try:
-                    lldp_info = (item for item in neighbor_file if item.keys()[0] == match.hostname).next()
-                except StopIteration:
-                    print 'No lldp info found for %s' % match.hostname
-                    to_proceed = False
-                     
-                if to_proceed:
-                    # search the lldp info file for this node
-                    cabling = validate_lldp(con, lldp_info[lldp_info.keys()[0]])  
-
-                    if cabling['success'] == True:
-                        #have the netElement need to make the ma1 configlet
-                        sn = node['systemMacAddress']
-                        configlet = make_configlet(match, config)
-                        name = match.hostname + '-MA1-CONFIG'
+                    configlet_key = clnt.api.add_configlet(name, configlet)
+                except CvpApiError as e:
+                    if 'Data already exists' in str(e):
+                        #remove existing configlet and recreate
+                        remove_old_configlet(name, clnt)
                         try:
                             configlet_key = clnt.api.add_configlet(name, configlet)
                         except CvpApiError as e:
-                            if 'Data already exists' in str(e):
-                                #remove existing configlet and recreate
-                                remove_old_configlet(name, clnt)
-                                try:
-                                    configlet_key = clnt.api.add_configlet(name, configlet)
-                                except CvpApiError as e:
-                                    # if this fails again tell user to check task list:
-                                    print 'unable to add configlet: %s' % str(e)
-                                    exit(-1)
+                            # if this fails again tell user to check task list:
+                            print 'unable to add configlet: %s' % str(e)
+                            exit(-1)
 
-                        #add ma1 configlet to device
-                        configlet_to_add = {'name':name, 'key':configlet_key}
-                        tasks_to_monitor = []
-                        task = None
-                        print 'Attempting to deploy device %s' % node['systemMacAddress']
-                        # only send image if there is one in the config file
-                        try:
-                            image = config['image']
-                        except KeyError:
-                            image = None
-                        try:
-                            # in this task it will move the node to the container 
-                            # that matches the node_type 
-                            task = clnt.api.deploy_device(node, match.node_type, 
-                                                      [configlet_to_add], image)   
-                            print 'Deploy Device task created'
-                            print 'Attempting to execute task'
-                            clnt.api.execute_task(task['data']['taskIds'][0])
-                            print 'Task executed...'
-                            tasks_to_monitor.append(task['data']['taskIds'][0])
-                           
-                        except CvpApiError as e:
-                            print "unable to deploy: %s due to %s" % (node['systemMacAddress'], str(e))
-                    else: # lldp verifcaition failure
-                        print '%s' % cabling['msg']
+                #add ma1 configlet to device
+                configlet_to_add = {'name':name, 'key':configlet_key}
+                tasks_to_monitor = []
+                task = None
+                print 'Attempting to deploy device %s' % node['systemMacAddress']
+                # only send image if there is one in the config file
+                try:
+                    image = config['image']
+                except KeyError:
+                    image = None
+                try:
+                    # in this task it will move the node to the container 
+                    # that matches the node_type 
+                    task = clnt.api.deploy_device(node, match.node_type, 
+                                              [configlet_to_add], image)   
+                    print 'Deploy Device task created'
+                    print 'Attempting to execute task'
+                    clnt.api.execute_task(task['data']['taskIds'][0])
+                    print 'Task executed...'
+                    nodes_with_tasks.append(match)
+                    tasks_to_monitor.append(task['data']['taskIds'][0])
+                   
+                except CvpApiError as e:
+                    print "unable to deploy: %s due to %s" % (node['systemMacAddress'], str(e))
             else:
                 print "no match found for %s" % node['systemMacAddress']
                 no_matches.append(node)
 
         if options.monitor:
             wait_for_tasks(tasks_to_monitor, clnt)
+            for sw in nodes_with_tasks:
+                sw_lldp_info = (item for item in neighbor_file if item.keys()[0] == sw.hostname).next()
+                host = sw_lldp_info.keys()[0]
+                eapi_node = pyeapi.client.connect(host=host,
+                                                  username=config['cvp_user'],
+                                                  password=config['cvp_pw'],
+                                                  return_node=True)
+                cabling = validate_lldp(eapi_node, sw_lldp_info[host])
+                if cabling['success']:
+                    print 'LLDP Verified for  %s' % host
+                else:
+                    print 'LLDP error: %s for %s' % (cabling['msg'], host)
+
+            
+                 
 
 
 if __name__ == '__main__':
